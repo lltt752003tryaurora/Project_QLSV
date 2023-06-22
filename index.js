@@ -11,7 +11,7 @@ B3: dùng mảng tạo ra bên trên để push đối tượng vào và lưu tr
 B4: hiển thị dữ liêụ ra cho user
 */
 
-var arrSinhVien = []
+var arrSinhVien = [];
 //mảng arrInput để hỗ trợ kĩ thuật PUSH DATA vào vòng lặp => truy xuất lấy giá trị nhanh hơn
 //có thể truy xuất giá trị thuộc tính của 1 object như sau:  sinhvien["txtMaSV"]
 var arrInput = [
@@ -24,7 +24,19 @@ var arrInput = [
   "txtDiemToan",
   "txtDiemLy",
   "txtDiemHoa",
-]
+];
+
+var arrNoti = [
+  "notiMaSV",
+  "notiTenSV",
+  "notiEmail",
+  "notiPass",
+  "notiNgaySinh",
+  "notiKhoaHoc",
+  "notiDiemToan",
+  "notiDiemLy",
+  "notiDiemHoa",
+];
 
 function themSinhVien() {
   // lấy dữ liệu từ người dùng
@@ -32,32 +44,53 @@ function themSinhVien() {
   event.preventDefault();
   var sv = new SinhVien();
   var valid = true;
+  // &= sẽ check hết tất cả các điều kiện nếu true thì mới trả về true
+  // valid &=
+  //   checkInputRong("txtMaSV", "notiMaSV") &
+  //   checkInputRong("txtTenSV", "notiMaSV") &
+  //   checkInputRong("txtEmail", "notiEmail") &
+  //   checkInputRong("txtPass", "notiPass") &
+  //   checkInputRong("txtNgaySinh", "notiNgaySinh") &
+  //   checkInputRong("khSV", "notiKhoaHoc") &
+  //   checkInputRong("txtDiemToan", "notiDiemToan") &
+  //   checkInputRong("txtDiemLy", "notiDiemLy") &
+  //   checkInputRong("txtDiemHoa", "notiDiemHoa");
+
   // KĨ THUẬT PUSH DATA VÀO DÙNG VÒNG LẶP
   for (var i = 0; i < arrInput.length; i++) {
+    valid &= checkInputRong(arrInput[i], arrNoti[i]);
     // lấy giá trị của từng ô input
     var giaTri = document.getElementById(arrInput[i]).value;
     // gán giá trị cho từng phần tử trong mảng sv bằng cách gọi sv["tên thuộc tính"]
     sv[arrInput[i]] = giaTri;
   }
-  arrSinhVien.push(sv);
-  // console.log(arrSinhVien);
-  renderSinhVien();
-  // làm trắng ô nhập data sau khi nhập và render xong
-  document.getElementById("formSinhVien").reset();
-  luuLocal();
+
+  valid &=
+    checkDinhDangEmail("txtEmail", "notiEmail") &
+    checkDinhDangDiem("txtDiemToan", "notiDiemToan") &
+    checkDinhDangDiem("txtDiemLy", "notiDiemLy") &
+    checkDinhDangDiem("txtDiemHoa", "notiDiemHoa");
+
+  if (valid == true) {
+    arrSinhVien.push(sv);
+    // console.log(arrSinhVien);
+    renderSinhVien();
+    // làm trắng ô nhập data sau khi nhập và render xong
+    document.getElementById("formSinhVien").reset();
+    luuLocal();
+  }
 }
 
 document.getElementById("btnThemSV").onclick = themSinhVien;
-
 
 // mỗi lần mảng được cập nhật data sinh viên: xóa data, thêm data, lấy data lên,... thì ta cần gọi hàm renderSinhVien ra để hiển thị cho người dùng
 function renderSinhVien() {
   var content = "";
   for (var i = 0; i < arrSinhVien.length; i++) {
     var sVien = arrSinhVien[i];
-    var new_SV_LayPT = new SinhVien()
+    var new_SV_LayPT = new SinhVien();
     // lấy dữ liệu thuộc tính của sVien để truyền vào cho new_SV_LayPT (vì sVien có dữ liệu THUỘC TÍNH đang được lưu trữ nhưng phương thức thì ko)
-    Object.assign(new_SV_LayPT,sVien)
+    Object.assign(new_SV_LayPT, sVien);
     // console.log(sVien);
     // console.log(new_SV_LayPT);
     content += `
@@ -69,29 +102,33 @@ function renderSinhVien() {
       <td>${new_SV_LayPT.khSV}</td>
       <td>${new_SV_LayPT.tinhDiemTB()}</td>
       <td>
-      <button onclick="xoaSinhVien(${new_SV_LayPT.txtMaSV})" class="btn btn-danger">Xóa</button>
-      <button onclick="layThongTinSinhVien(${new_SV_LayPT.txtMaSV})" class="btn btn-warning">Sửa</button>
+      <button onclick="xoaSinhVien(${
+        new_SV_LayPT.txtMaSV
+      })" class="btn btn-danger">Xóa</button>
+      <button onclick="layThongTinSinhVien(${
+        new_SV_LayPT.txtMaSV
+      })" class="btn btn-warning">Sửa</button>
       </td> 
     </tr>
-    `
+    `;
   }
   document.getElementById("tbodySinhVien").innerHTML = content;
 }
 
-function xoaSinhVien (maSV) {
+function xoaSinhVien(maSV) {
   /*Khi xóa cần xác định một thuộc tính có giá trị giống như một mã định danh, là đặc trưng và không thể bị trùng
   Khi tìm được sẽ dùng giá trị đó để chạy vòng lặp qua tất cả các phần tử và tìm xem đối tượng là ai nằm ở đâu
   splice sẽ giúp xóa phần tử trong mảng 
   */
-  var index = -1
+  var index = -1;
   for (var i = 0; i < arrSinhVien.length; i++) {
-    var sinhVien = arrSinhVien[i]
+    var sinhVien = arrSinhVien[i];
     if (sinhVien.txtMaSV == maSV) {
-      index = i
+      index = i;
     }
   }
   // Xóa phần tử đó ra khỏi mảng
-  arrSinhVien.splice(index,1)
+  arrSinhVien.splice(index, 1);
   console.log(arrSinhVien);
   // mảng có 3 phần tử --> render lên giao diện -> xóa đi 1 phần tử thì mảng có 2 phần tử -> phải render lại để giao diện được cập nhật
   // mặc dù xóa thì mảng vẫn đã được xóa đi 1 phần tử nhưng phải render lại để chạy lại hiện ra giao diện
@@ -101,8 +138,6 @@ function xoaSinhVien (maSV) {
 
 // document.getElementById("").onclick = ;
 // document.getElementById("").addEventListener("click", function() {})
-
-
 
 // // LOCAL STORAGE
 // /*
@@ -131,12 +166,12 @@ function xoaSinhVien (maSV) {
 
 // localStorage.removeItem("Họ tên")
 
-function luuLocal () {
+function luuLocal() {
   //lấy mảng arrSinhVien lưu xuống localStorage
-  localStorage.setItem("arrSinhVien",JSON.stringify(arrSinhVien));
+  localStorage.setItem("arrSinhVien", JSON.stringify(arrSinhVien));
 }
 
-function layLocalHienThi () {
+function layLocalHienThi() {
   //Phương thức getItem để lấy dữ liệu từ dưới local lên trên, dùng JSON.parse để chuyển đổi JSON đang có thành object(hay array)
   // Đầu tiên, cho biến giá trị để hứng data từ local về
   var data = localStorage.getItem("arrSinhVien");
@@ -144,11 +179,10 @@ function layLocalHienThi () {
   // nếu user lần đầu dùng thì arrSinhVien = null
   // do đó cần phải check điều kiện phải có dữ liệu mới gán vào array
   if (data != null) {
-    arrSinhVien = JSON.parse(data)
+    arrSinhVien = JSON.parse(data);
     // render lên giao diện để reload trang tránh bị mất data
     renderSinhVien();
   }
-
 }
 
 //để ở ngoài do khi user bấm reload lại trang thì ta cần phải lấy dữ liệu đã được lưu ở localStorage lên lại để hiển thị user (tránh bị mất data)
@@ -169,33 +203,33 @@ Khi lấy được sinh viên, làm gì để người dùng có thể chỉnh s
 
 */
 
-function layThongTinSinhVien (maSV) {
+function layThongTinSinhVien(maSV) {
   // gọi object rỗng
-  var sinhVien = {}
+  var sinhVien = {};
   for (var i = 0; i < arrSinhVien.length; i++) {
     // check maSV cần tìm
     if (arrSinhVien[i].txtMaSV == maSV) {
-      sinhVien = arrSinhVien[i]
+      sinhVien = arrSinhVien[i];
     }
   }
   // sau khi tìm được sinhVien, ta sẽ chạy một vòng lặp để đưa hết tất cả các giá trị trong thuộc tính của sinhVien lên bên trên input cho người dùng chỉnh sửa
   for (var j = 0; j < arrInput.length; j++) {
-    document.getElementById(arrInput[j]).value = sinhVien[arrInput[j]]
+    document.getElementById(arrInput[j]).value = sinhVien[arrInput[j]];
   }
   //Xử lý cho input mã sinh viên chỉ được đọc không được chỉnh sửa (vì MaSV như là 1 khóa chính không được trùng lắp để định danh một sinh viên)
   document.getElementById("txtMaSV").readOnly = true;
-  document.getElementById("btnCapNhat").style.display = "inline-block"
+  document.getElementById("btnCapNhat").style.display = "inline-block";
 }
 
-function CapNhatThongTinSinhVien () {
+function CapNhatThongTinSinhVien() {
   //lấy dữ liệu mới từ người dùng
   event.preventDefault();
   var sinhVien = new SinhVien();
   for (var i = 0; i < arrInput.length; i++) {
-    var valueInput = document.getElementById(arrInput[i]).value
-    sinhVien[arrInput[i]] = valueInput
+    var valueInput = document.getElementById(arrInput[i]).value;
+    sinhVien[arrInput[i]] = valueInput;
   }
-  // tìm lại vị trí của object cũ đang nằm trong arrSinhVien bằng mã SV 
+  // tìm lại vị trí của object cũ đang nằm trong arrSinhVien bằng mã SV
   // Tìm lại bởi vì sau khi lấy được dữ liệu mới từ user thì ta phải thay thế data mới đó cho data cũ nên cần phải biết vị trí của object cũ
   var index = -1;
   for (var i = 0; i < arrSinhVien.length; i++) {
@@ -203,31 +237,13 @@ function CapNhatThongTinSinhVien () {
       index = i;
     }
   }
-  arrSinhVien[index] = sinhVien
+  arrSinhVien[index] = sinhVien;
   //clear đang hiển thị ở ô input
   document.getElementById("formSinhVien").reset();
-  document.getElementById("btnCapNhat").style.display = "none"
+  document.getElementById("btnCapNhat").style.display = "none";
   document.getElementById("txtMaSV").readOnly = false;
   renderSinhVien();
   luuLocal();
 }
 
-document.getElementById("btnCapNhat").onclick = CapNhatThongTinSinhVien
-
-/*
-Validation (Kiểm tra dữ liệu đầu vào) cho sinh viên
-- Không để trống trường nhập
-
-*/
-
-function checkInputRong (idInput, idNoti) {
-  //gọi dom tới và check xem dữ liệu có rỗng không, nếu rỗng sễ xuất ra câu thông báo và chặn user thêm SV
-  var valInput = document.getElementById(idInput).value
-  if (valInput == "") {
-    document.getElementById(idNoti).innerHTML = "Vui lòng không để trống."
-    return false;
-  } else {
-    document.getElementById(idNoti).innerHTML = ""
-    return true;
-  }
-}
+document.getElementById("btnCapNhat").onclick = CapNhatThongTinSinhVien;
